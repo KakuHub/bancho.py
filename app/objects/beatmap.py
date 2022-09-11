@@ -18,6 +18,7 @@ import app.utils
 from app.constants.gamemodes import GameMode
 from app.logging import Ansi
 from app.logging import log
+from app.constants.mods import Mods
 from app.utils import escape_enum
 from app.utils import pymysql_encode
 

@@ -16,6 +16,7 @@ import uuid
 from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime
+from datetime import timedelta
 from functools import wraps
 from pathlib import Path
 from time import perf_counter_ns as clock_ns
@@ -49,6 +50,8 @@ from app.constants.mods import Mods
 from app.constants.mods import SPEED_CHANGING_MODS
 from app.constants.privileges import ClanPrivileges
 from app.constants.privileges import Privileges
+from app.discord import Embed
+from app.discord import Webhook
 from app.objects.beatmap import Beatmap
 from app.objects.beatmap import ensure_local_osu_file
 from app.objects.beatmap import RankedStatus

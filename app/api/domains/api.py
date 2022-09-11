@@ -396,8 +396,10 @@ async def api_get_player_scores(
 
     # fetch & return info from sql
     for row in rows:
+        mods = Mods(row["mods"])
         bmap = await Beatmap.from_md5(row.pop("map_md5"))
         row["beatmap"] = bmap.as_dict if bmap else None
+        row["mods_readable"] = Mods(row["mods"]).__repr__()
 
     player_info = {
         "id": player.id,
@@ -649,7 +651,7 @@ async def api_get_score_info(
 @router.get("/get_replay")
 async def api_get_replay(
     score_id: int = Query(..., alias="id", ge=0, le=9_223_372_036_854_775_807),
-    include_headers: bool = False,
+    include_headers: bool = True,
     db_conn: databases.core.Connection = Depends(acquire_db_conn),
 ):
     """Return a given replay (including headers)."""
@@ -665,7 +667,7 @@ async def api_get_replay(
     # read replay frames from file
     raw_replay_data = replay_file.read_bytes()
 
-    if include_headers:
+    if not include_headers:
         return StreamingResponse(
             raw_replay_data,
             media_type="application/octet-stream",
@@ -721,7 +723,11 @@ async def api_get_replay(
     replay_data = bytearray()
 
     # pack first section of headers.
-    replay_data += struct.pack("<Bi", row["mode"], 20200207)  # TODO: osuver
+    replay_data += struct.pack(
+        "<Bi",
+        GameMode(row["mode"]).as_vanilla,
+        20200207,
+    )  # TODO: osuver
     replay_data += app.packets.write_string(row["map_md5"])
     replay_data += app.packets.write_string(row["username"])
     replay_data += app.packets.write_string(replay_md5)
@@ -755,7 +761,7 @@ async def api_get_replay(
 
     # stream data back to the client
     return StreamingResponse(
-        replay_data,
+        bytes(replay_data),
         media_type="application/octet-stream",
         headers={
             "Content-Description": "File Transfer",

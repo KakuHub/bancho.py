@@ -59,6 +59,21 @@ class Grade(IntEnum):
             "n": Grade.N,
         }[s.lower()]
 
+    @functools.cache
+    def __repr__(self) -> str:
+        return {
+            Grade.XH: "XH",
+            Grade.X: "X",
+            Grade.S: "S",
+            Grade.SH: "SH",
+            Grade.A: "A",
+            Grade.B: "B",
+            Grade.C: "C",
+            Grade.D: "D",
+            Grade.F: "F",
+            Grade.N: "N",
+        }[self]
+
     def __format__(self, format_spec: str) -> str:
         if format_spec == "stats_column":
             return f"{self.name.lower()}_count"

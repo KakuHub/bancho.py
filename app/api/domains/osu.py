@@ -8,6 +8,7 @@ import secrets
 import time
 from base64 import b64decode
 from collections import defaultdict
+from datetime import datetime
 from enum import IntEnum
 from enum import unique
 from functools import cache
@@ -49,6 +50,8 @@ import app.packets
 import app.settings
 import app.state
 import app.utils
+from app.discord import Embed
+from app.discord import Webhook
 from app.constants import regexes
 from app.constants.clientflags import LastFMFlags
 from app.constants.gamemodes import GameMode
@@ -1906,6 +1909,15 @@ async def register_account(
     # ensure all args passed
     # are safe for registration.
     errors: Mapping[str, list[str]] = defaultdict(list)
+
+    if app.settings.DISABLE_INGAME_REGISTRATION:
+        errors["password"].append("The in-game registration is disabled. Please try to register on the website.")
+        errors = {k: ["\n".join(v)] for k, v in errors.items()}
+        errors_full = {"form_error": {"user": errors}}
+        return ORJSONResponse(
+            content=errors_full,
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
 
     # Usernames must:
     # - be within 2-15 characters in length
