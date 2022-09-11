@@ -1191,6 +1191,46 @@ async def osuSubmitModularSelector(
         f"({score.status!r}, {score.pp:,.2f}pp / {stats.pp:,}pp)",
         Ansi.LGREEN,
     )
+    
+    if (
+        score.rank == 1
+        and score.status == SubmissionStatus.BEST
+        and not score.player.restricted
+    ):
+        webhook = Webhook(url=app.settings.DISCORD_SCORES_LOG_WEBHOOK)
+
+
+        if not score.max_combo <= score.max_combo - 10 and score.nmiss == 0:
+            status = "FC"
+        else:
+            if score.nmiss > 0:
+                status = f"{score.max_combo}/{score.bmap.max_combo} {score.nmiss}xMiss"
+            else:
+                status = f"{score.max_combo}/{score.bmap.max_combo} SB"
+
+        mods = f"{score.mods!r}"
+        if "NC" in mods:
+            mods = mods.replace("DT", "")
+
+        embed = Embed(
+            title=f"__New #1 **{score.pp:.2f}pp**__",
+            description=f"⬤ [{score.mode!r}] ⬤ #{stats.rank} ⬤ {stats.pp}pp ⬤ {stats.acc:.2f}%\n⬤ {status} ⬤ {score.grade!r} ⬤ {mods} ⬤ {score.acc:.2f}%\n[{score.bmap.full_name}](https://osu.atsu.pw/b/{score.bmap.id})",
+            color=0x17181c,
+            timestamp=datetime.utcnow(),
+        )
+
+        embed.set_author(
+            url=score.player.url,
+            name=score.player.name,
+            icon_url=score.player.avatar_url,
+        )
+
+        embed.set_image(
+            url=f"https://assets.ppy.sh/beatmaps/{score.bmap.set_id}/covers/cover.jpg",
+        )
+        embed.set_footer(text=f"submitted on atsu.pw")
+        webhook.add_embed(embed)
+        await webhook.post(app.state.services.http)
 
     return ret
 
