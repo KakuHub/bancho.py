@@ -575,6 +575,33 @@ class Player:
             # log the user out if they're offline, this
             # will simply relog them and refresh their app.state
             self.logout()
+            
+    async def wipe(self, admin: Player, reason: str) -> None:
+        """Wipe `self` for `reason`, and log to sql."""
+        await app.state.services.database.execute(
+            "INSERT INTO logs "
+            "(`from`, `to`, `action`, `msg`, `time`) "
+            "VALUES (:from, :to, :action, :msg, NOW())",
+            {"from": admin.id, "to": self.id, "action": "wipe", "msg": reason},
+        )
+
+        for mode in (0, 1, 2, 3, 4, 5, 6, 8):
+            await app.state.services.redis.zrem(
+                f"bancho:leaderboard:{mode}",
+                self.id,
+            )
+            await app.state.services.redis.zrem(
+                f'bancho:leaderboard:{mode}:{self.geoloc["country"]["acronym"]}',
+                self.id,
+            )
+            await app.state.services.database.execute(
+                "UPDATE stats SET pp = 0, acc = 0.0, tscore = 0, rscore = 0, plays = 0, playtime = 0 " +
+                "max_combo = 0, total_hits = 0, replay_views = 0, xh_count = 0, x_count = 0, sh_count = 0, s_count = 0, a_count = 0 WHERE id = :user_id AND mode = :mode",
+                {"user_id": self.id, "mode": mode},
+            )
+
+        await app.state.services.database.execute("DELETE FROM scores WHERE userid = :user_id", {"user_id": self.id})
+
 
     async def silence(self, admin: Player, duration: int, reason: str) -> None:
         """Silence `self` for `duration` seconds, and log to sql."""
