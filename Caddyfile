@@ -1,0 +1,31 @@
+api.atsu.pw,
+b.atsu.pw,
+a.atsu.pw,
+c4.atsu.pw,
+ce.atsu.pw,
+c.atsu.pw {
+        log
+        reverse_proxy 127.0.0.1:1234 {
+          header_up X-Real-IP {remote}
+        }
+        header * {
+          Access-Control-Allow-Origin *
+        }
+}
+
+osu.atsu.pw {
+        log
+        @guweb {
+          not path_regexp ^\/(?:web|api|users|ss|d|p|beatmaps|beatmapsets|community|difficulty-rating|discord_oauth_callback)(?:\/.*|$)
+        }
+
+        reverse_proxy @guweb 127.0.0.1:8000
+        reverse_proxy 127.0.0.1:1234 {
+          header_up X-Real-IP {remote}
+        }
+}
+
+assets.atsu.pw {
+           root * /home/sensokaku/bancho.py/.data/assets/
+           file_server
+}
