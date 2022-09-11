@@ -29,3 +29,8 @@ assets.atsu.pw {
            root * /home/sensokaku/bancho.py/.data/assets/
            file_server
 }
+
+a.atsu.pw {
+           root * /home/sensokaku/bancho.py/.data/avatars/
+           file_server
+}
