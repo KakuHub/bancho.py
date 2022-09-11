@@ -584,6 +584,16 @@ async def request(ctx: Context) -> Optional[str]:
 
     bmap = ctx.player.last_np["bmap"]
 
+    async with app.state.services.database.connection() as db_conn:
+            # select all map ids for clearing map requests.
+            map_ids = [
+                row[0]
+                for row in await db_conn.fetch_all(
+                    "SELECT id FROM maps WHERE set_id = :set_id",
+                    {"set_id": bmap.set_id},
+                )
+            ]  
+
     if bmap.status != RankedStatus.Pending:
         return "Only pending maps may be requested for status change."
 
@@ -593,6 +603,55 @@ async def request(ctx: Context) -> Optional[str]:
         "VALUES (:map_id, :user_id, NOW(), 1)",
         {"map_id": bmap.id, "user_id": ctx.player.id},
     )
+    
+    embed = Embed(
+        title=f"has been requested [{repr(bmap.mode)[3:].upper()}]",
+        color=0x17181c,
+        timestamp=datetime.utcnow(),
+    )
+
+    embed.set_footer(
+        text=f"{ctx.player.name}",
+        icon_url=f"https://a.atsu.pw/{ctx.player.id}",
+    )
+
+    embed.set_author(
+        url=f"https://osu.atsu.pw/b/{bmap.id}",
+        name=f"{bmap.artist} - {bmap.title}",
+        icon_url="https://osu.atsu.pw/static/images/icon2.png",
+    )
+
+    length = str(timedelta(seconds=bmap.total_length))
+
+    if bmap.total_length < 3600:
+        length = length[2:]
+
+    embed.add_field(
+        name="**Stats**",
+        value=f"**BPM**: {bmap.bpm:.2f}\n**Length**: {length}\nThis set has **{len(map_ids)}** diffs.",
+        inline=True,
+    )
+
+    embed.add_field(
+        name="**Download**",
+        value=f"[Bancho Listing](https://osu.ppy.sh/beatmapsets/{bmap.set_id})",
+        inline=True,
+        )
+
+    embed.add_field(
+        name="**Requester**",
+        value=f"[{ctx.player.name}](https://osu.atsu.pw/u/{ctx.player.id})",
+        inline=True,
+    )
+
+    embed.set_image(
+        url=f"https://assets.ppy.sh/beatmaps/{bmap.set_id}/covers/cover.jpg",
+    )
+
+    webhook = Webhook(url=app.settings.DISCORD_REQ_LOG_WEBHOOK)
+
+    webhook.add_embed(embed)
+    await webhook.post(app.state.services.http)
 
     return "Request submitted."
 
@@ -726,6 +785,56 @@ async def _map(ctx: Context) -> Optional[str]:
 
             if bmap.md5 in app.state.cache.beatmap:
                 app.state.cache.beatmap[bmap.md5].status = new_status
+                
+        if new_status > 0:
+            embed = Embed(
+                title=f"is now {ok} [{bmap.mode.__cool__()}]",
+                color=0x17181c,
+                timestamp=datetime.utcnow(),
+            )
+
+            embed.set_footer(
+                text=f"{ctx.player.name}",
+                icon_url=f"https://a.atsu.pw/{ctx.player.id}",
+            )
+
+            embed.set_author(
+                url=f"https://osu.ppy.sh/b/{bmap.id}",
+                name=bmap.full_name_no_diff if ctx.args[1] == "set" else bmap.full_name,
+                icon_url="https://osu.atsu.pw/static/images/icon2.png",
+            )
+
+            length = str(timedelta(seconds=bmap.total_length))
+
+            if bmap.total_length < 3600:
+                length = length[2:]
+
+            embed.add_field(
+                name="**Stats**",
+                value=f"**BPM**: {bmap.bpm:.2f}\n**Length**: {length}\n**SR**: {bmap.diff:.2f}",
+                inline=True,
+            )
+
+            embed.add_field(
+                name="**Download**",
+                value=f"[osu!Bancho](https://osu.ppy.sh/beatmapsets/{bmap.set_id})\n[osu!Gatari](https://osu.gatari.pw/d/{bmap.set_id})",
+                inline=True,
+            )
+
+            embed.add_field(
+                name="**Nominator**",
+                value=f"[{ctx.player.name}](https://osu.atsu.pw/u/{ctx.player.id})",
+                inline=True,
+            )
+
+            embed.set_image(
+                url=f"https://assets.ppy.sh/beatmaps/{bmap.set_id}/covers/cover.jpg",
+            )
+
+            webhook = Webhook(url=app.settings.DISCORD_MAPS_LOG_WEBHOOK)
+
+            webhook.add_embed(embed)
+            await webhook.post(app.state.services.http)
 
         # deactivate rank requests for all ids
         await db_conn.execute(
