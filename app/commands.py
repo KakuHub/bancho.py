@@ -925,6 +925,33 @@ async def user(ctx: Context) -> Optional[str]:
 
 
 @command(Privileges.ADMINISTRATOR, hidden=True)
+async def wipe(ctx: Context) -> Optional[str]:
+    """Wipe a specified player by name."""
+    if len(ctx.args) < 2:
+        return "Invalid syntax: !wipe <name> <reason>"
+    if not (t := await app.state.sessions.players.from_cache_or_sql(name=ctx.args[0])):
+        return f'"{ctx.args[0]}" not found.'
+
+    if t.priv & Privileges.STAFF and not ctx.player.priv & Privileges.DEVELOPER:
+        return "Only developers can manage staff members."
+
+    reason = " ".join(ctx.args[1:])
+
+    await t.wipe(ctx.player, reason)
+    return f"Wiped {t}."
+# some shorthands that can be used as
+# reasons in many moderative commands.
+SHORTHAND_REASONS = {
+    "aa": "having their appeal accepted",
+    "cc": "using a modified osu! client",
+    "3p": "using 3rd party programs",
+    "rx": "using 3rd party programs (relax)",
+    "tw": "using 3rd party programs (timewarp)",
+    "au": "using 3rd party programs (auto play)",
+}
+
+
+@command(Privileges.ADMINISTRATOR, hidden=True)
 async def restrict(ctx: Context) -> Optional[str]:
     """Restrict a specified player's account, with a reason."""
     if len(ctx.args) < 2:
