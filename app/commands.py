@@ -654,7 +654,7 @@ async def request(ctx: Context) -> Optional[str]:
     webhook = Webhook(url=app.settings.DISCORD_REQ_LOG_WEBHOOK)
 
     webhook.add_embed(embed)
-    await webhook.post(app.state.services.http)
+    await webhook.post(app.state.services.http_client)
 
     return "Request submitted."
 
@@ -837,7 +837,7 @@ async def _map(ctx: Context) -> Optional[str]:
             webhook = Webhook(url=app.settings.DISCORD_MAPS_LOG_WEBHOOK)
 
             webhook.add_embed(embed)
-            await webhook.post(app.state.services.http)
+            await webhook.post(app.state.services.http_client)
 
         # deactivate rank requests for all ids
         await db_conn.execute(
