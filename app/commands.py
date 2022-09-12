@@ -756,6 +756,8 @@ async def _map(ctx: Context) -> Optional[str]:
     # XXX: not sure if getting md5s from sql
     # for updating cache would be faster?
     # surely this will not scale as well..
+    
+    ok = f"{new_status!s}!".lower()
 
     async with app.state.services.database.connection() as db_conn:
         if ctx.args[1] == "set":
