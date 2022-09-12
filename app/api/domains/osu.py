@@ -1233,7 +1233,7 @@ async def osuSubmitModularSelector(
         )
         embed.set_footer(text=f"submitted on atsu.pw")
         webhook.add_embed(embed)
-        await webhook.post(app.state.services.http)
+        await webhook.post(app.state.services.http_client)
 
     return ret
 
