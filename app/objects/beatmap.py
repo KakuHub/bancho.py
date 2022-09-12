@@ -943,6 +943,3 @@ def cache_beatmap_set(beatmap_set: BeatmapSet) -> None:
     for beatmap in beatmap_set.maps:
         cache_beatmap(beatmap)
         
-def __cool__(self) -> str:
-        new = GameMode(self.as_vanilla)
-        return new.__repr__()

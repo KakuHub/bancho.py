@@ -70,3 +70,8 @@ class GameMode(IntEnum):
 
     def __repr__(self) -> str:
         return GAMEMODE_REPR_LIST[self.value]
+
+    def __cool__(self) -> str:
+        new = GameMode(self.as_vanilla)
+        return new.__repr__()
+        
