@@ -645,6 +645,15 @@ async def api_get_score_info(
 
     return ORJSONResponse({"status": "success", "score": dict(row)})
 
+def as_vanilla(mode: int) -> int:
+    if mode in (1, 5):
+        return 1
+    elif mode in (2, 6):
+        return 2
+    elif mode == 3:
+        return mode
+
+    return 0
 
 # TODO: perhaps we can do something to make these count towards replay views,
 #       but we'll want to make it difficult to spam.
@@ -725,7 +734,7 @@ async def api_get_replay(
     # pack first section of headers.
     replay_data += struct.pack(
         "<Bi",
-        GameMode(row["mode"]).as_vanilla,
+        as_vanilla(row["mode"]),
         20200207,
     )  # TODO: osuver
     replay_data += app.packets.write_string(row["map_md5"])
