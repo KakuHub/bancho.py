@@ -1,6 +1,5 @@
 api.atsu.pw,
 b.atsu.pw,
-a.atsu.pw,
 c4.atsu.pw,
 ce.atsu.pw,
 c.atsu.pw {
@@ -16,7 +15,7 @@ c.atsu.pw {
 osu.atsu.pw {
         log
         @guweb {
-          not path_regexp ^\/(?:web|api|users|ss|d|p|beatmaps|beatmapsets|community|difficulty-rating|discord_oauth_callback)(?:\/.*|$)
+          not path_regexp ^\/(?:web|api|users|ss|d|p|beatmaps|beatmapsets|community|difficulty-rating)(?:\/.*|$)
         }
 
         reverse_proxy @guweb 127.0.0.1:8000
@@ -32,5 +31,7 @@ assets.atsu.pw {
 
 a.atsu.pw {
            root * /home/sensokaku/bancho.py/.data/avatars/
-           file_server
+           try_files {path} {path}.png {path}.jpg {path}.gif {path}.jpeg {path}.jfif /default.jpg
+           file_server browse
+           log
 }
